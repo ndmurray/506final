@@ -139,7 +139,7 @@ class Article_NYT(object):
 		else:
 			self.pub_date = ''
 		if 'headline' in article_dict:
-			self.title = article_dict['headline']['main']
+			self.title = article_dict['headline']['main'].replace(","," ")
 		else:
 			self.title = ''
 		if 'snippet' in article_dict:
@@ -147,7 +147,7 @@ class Article_NYT(object):
 		else:
 			self.abstract = ''
 		if 'byline' in article_dict:
-			self.author = article_dict['byline']['original']
+			self.author = article_dict['byline']['original'].replace(","," ")
 
 	def abstract_clean(self):
 		return self.abstract.lower().replace('.','').replace(',','').replace(';','').replace(':','').replace(')','').replace('(','')
@@ -185,7 +185,7 @@ class Article_WSJ(object):
 		else:
 			self.pub_date = ''
 		if 'title' in article_dict:
-			self.title = article_dict['title']
+			self.title = article_dict['title'].replace(","," ")
 		else:
 			self.title = ''
 		if 'description' in article_dict:
@@ -193,7 +193,7 @@ class Article_WSJ(object):
 		else:
 			self.abstract = ''
 		if 'author' in article_dict:
-			self.author = article_dict['author']
+			self.author = str(article_dict['author']).replace(","," ")
 
 	def abstract_clean(self):
 		return self.abstract.lower().replace('.','').replace(',','').replace(';','').replace(':','').replace(')','').replace('(','')
@@ -282,3 +282,18 @@ print(test_wsj)
 # print(test_wsj.author)
 
 #************ WRITE OUTPUT DATA TO CSV
+
+#Open the file and specify column headers
+output_file = open('output_data.csv','w')
+output_file.write('query_term,source,title,author,published_on,emo_score\n')
+
+#Write in the NYT data
+for item in nyt:
+	output_file.write(query+", NYT, {}, {}, {}, {}\n".format(item.title,item.author,item.pub_date,item.emo_score()))
+
+#Write in the WSJ data
+
+for item in wsj:
+	output_file.write(query+", WSJ, {}, {}, {}, {}\n".format(item.title,item.author,item.pub_date,item.emo_score()))
+
+
