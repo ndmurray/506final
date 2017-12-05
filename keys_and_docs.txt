@@ -1,0 +1,38 @@
+##NYT##
+
+API Key:1516c95485e1408e935c017d4b17dd41
+
+https://developer.nytimes.com/article_search_v2.json#/Documentation/GET/articlesearch.json
+
+'api-key': the key as a string
+'q' : give it a comma separated list of search terms
+'begin_date' : date as string in this format: YYYYMMDD
+'end_date' : see 'begin_date'
+
+
+##WSJ##
+
+WSJ API Key:6eb4b4825f444a30a0a381f36814b69a
+Getting started: https://newsapi.org/docs/get-started
+
+https://newsapi.org/docs/endpoints/everything
+
+'apiKey': key as a string
+'q': Comma separated keywords, also use AND, OR if you want
+'language': 'en'
+'from': start date as string YYYY-MM-DD
+'to': End date in same format as the start date
+
+STEPS
+
+1. Successfully request data that includes article abstracts (or 'descriptions') based on begin date, end date, some kind of QUERTY WORD, this will be a user input word
+
+BONUS: If there's time, make the date fields user input as well.
+
+2. Build functions that do the data requesting for both sources
+
+3. Build in the caching functionality, this should be one cache file for requests from both sources, as each request will be pulling from both sources
+
+4. Define your article classes for both sources, that pull an emotional score out of the descriptions as methods, among other things you need for the CSV file in step 5
+
+5. Define the CSV output function that pulls emotional score (also perhaps with positive and negative scores), date, author, source
