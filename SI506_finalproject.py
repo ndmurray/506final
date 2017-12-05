@@ -8,6 +8,17 @@ import sys
 KEY_NYT = "1516c95485e1408e935c017d4b17dd41"
 KEY_WSJ = "8c9c84eb251f426fb635a35bb66dbe26"
 
+#************ INPUT VARIABLES
+
+query = 'Trump' #input("Enter your search query: ")
+#start = input("enter start date as YYYY-MM-DD: ")
+#end = input("enter end date as YYYY-MM-DD: ")
+
+nyt_start = '2016-10-25' #start
+nyt_end = '2017-10-25' #end
+wsj_start = '2016-10-25T00:00:00Z' #start + "T00:00:00Z"
+wsj_end = '2017-10-25T00:00:00Z' #end + "T00:00:00Z"
+
 #************ CACHING SYSTEM
 
 #Specify cache file
@@ -103,11 +114,6 @@ def get_wsj_data(keywords,start_date,end_date):
 		print("New WSJ data written to cache")
 		return CACHE_DICT
 
-
-
-
-
-
 #************ BRING IN THE POSITIVE/NEGATIVE WORD FILES
 
 pos_words = []
@@ -166,6 +172,9 @@ class Article_NYT(object):
 	def emo_score(self):
 		return self.positive_count() - self.negative_count()
 
+	def __str__(self):
+		return "{}, by {}, New York Times, published {}, emotional score: {}".format(self.title, self.author, self.pub_date, self.emo_score())
+
 #WSJ
 
 class Article_WSJ(object):
@@ -209,6 +218,9 @@ class Article_WSJ(object):
 	def emo_score(self):
 		return self.positive_count() - self.negative_count()
 
+	def __str__(self):
+		return "{}, by {}, Wall Street Journal, published {}, emotional score: {}".format(self.title, self.author, self.pub_date, self.emo_score())
+
 #************ DEFINE ARTICLE LIST FORMATTING FUNCTIONS
 
 #Pull NYT and WSJ articles from the cache dictionary, we can identify
@@ -244,21 +256,29 @@ def wsj_format(response_data):
 	print("WSJ article count " + str(len(wsj_articles)))
 	return wsj_articles
 
-nyt = nyt_format(get_nyt_data('Trump','20140810','20170810',0)) + nyt_format(get_nyt_data('Trump','20140810','20170810',1))
+#************ PULL DATA BASED ON USER DEFINED PARAMETERS
 
-test_nyt = nyt[0]
+nyt = nyt_format(get_nyt_data(query,nyt_start,nyt_end,0)) + nyt_format(get_nyt_data(query,nyt_start,nyt_end,1))
 
-print(test_nyt.title)
-print(test_nyt.pub_date)
-print(test_nyt.abstract)
-print(test_nyt.author)
+test_nyt = str(nyt[0])
+
+print(test_nyt)
+
+# print(test_nyt.title)
+# print(test_nyt.pub_date)
+# print(test_nyt.abstract)
+# print(test_nyt.author)
 
 #List of WSJ classed articles 
-wsj = wsj_format(get_wsj_data('Pence','2016-10-25T00:00:00Z','2017-10-25T00:00:00Z'))
+wsj = wsj_format(get_wsj_data(query,wsj_start,wsj_end))
 
-test_wsj = wsj[0]
+test_wsj = str(wsj[0])
 
-print(test_wsj.title)
-print(test_wsj.pub_date)
-print(test_wsj.abstract)
-print(test_wsj.author)
+print(test_wsj)
+
+# print(test_wsj.title)
+# print(test_wsj.pub_date)
+# print(test_wsj.abstract)
+# print(test_wsj.author)
+
+#************ WRITE OUTPUT DATA TO CSV
