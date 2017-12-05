@@ -10,14 +10,14 @@ KEY_WSJ = "8c9c84eb251f426fb635a35bb66dbe26"
 
 #************ INPUT VARIABLES
 
-query = 'Trump' #input("Enter your search query: ")
-#start = input("enter start date as YYYY-MM-DD: ")
-#end = input("enter end date as YYYY-MM-DD: ")
+query = input("Enter your search query: ")
+start = input("enter start date as YYYY-MM-DD: ")
+end = input("enter end date as YYYY-MM-DD: ")
 
-nyt_start = '2016-10-25' #start
-nyt_end = '2017-10-25' #end
-wsj_start = '2016-10-25T00:00:00Z' #start + "T00:00:00Z"
-wsj_end = '2017-10-25T00:00:00Z' #end + "T00:00:00Z"
+nyt_start = start
+nyt_end = end
+wsj_start = start + "T00:00:00Z"
+wsj_end = end + "T00:00:00Z"
 
 #************ CACHING SYSTEM
 
@@ -173,7 +173,7 @@ class Article_NYT(object):
 		return self.positive_count() - self.negative_count()
 
 	def __str__(self):
-		return "{}, by {}, New York Times, published {}, emotional score: {}".format(self.title, self.author, self.pub_date, self.emo_score())
+		return "{}; by {}; New York Times; published {}; emotional score: {}".format(self.title, self.author, self.pub_date, self.emo_score())
 
 #WSJ
 
@@ -219,7 +219,7 @@ class Article_WSJ(object):
 		return self.positive_count() - self.negative_count()
 
 	def __str__(self):
-		return "{}, by {}, Wall Street Journal, published {}, emotional score: {}".format(self.title, self.author, self.pub_date, self.emo_score())
+		return "{}; by {}; Wall Street Journal; published {}; emotional score: {}".format(self.title, self.author, self.pub_date, self.emo_score())
 
 #************ DEFINE ARTICLE LIST FORMATTING FUNCTIONS
 
@@ -242,7 +242,7 @@ def nyt_format(response_data):
 			for item2 in CACHE_DICT[item]['response']['docs']:
 				nyt_articles.append(Article_NYT(item2))
 	print("NYT article count " + str(len(nyt_articles)))
-	return nyt_articles
+	return sorted(nyt_articles, key = lambda x:x.emo_score())
 
 #Okay now the WSJ,
 def wsj_format(response_data):
@@ -254,15 +254,19 @@ def wsj_format(response_data):
 			for item2 in CACHE_DICT[item]['articles']:
 				wsj_articles.append(Article_WSJ(item2))
 	print("WSJ article count " + str(len(wsj_articles)))
-	return wsj_articles
+	return sorted(wsj_articles, key = lambda x:x.emo_score())
 
 #************ PULL DATA BASED ON USER DEFINED PARAMETERS
 
 nyt = nyt_format(get_nyt_data(query,nyt_start,nyt_end,0)) + nyt_format(get_nyt_data(query,nyt_start,nyt_end,1))
 
-test_nyt = str(nyt[0])
+#sort descending by emo score
+nyt_sorted = sorted(nyt, key = lambda x:x.emo_score(), reverse=True)
 
-print(test_nyt)
+#sort by emo score
+# test_nyt = str(nyt[0])
+
+# print(test_nyt)
 
 # print(test_nyt.title)
 # print(test_nyt.pub_date)
@@ -272,9 +276,12 @@ print(test_nyt)
 #List of WSJ classed articles 
 wsj = wsj_format(get_wsj_data(query,wsj_start,wsj_end))
 
-test_wsj = str(wsj[0])
+#sort descending by emo score
+wsj_sorted = sorted(wsj, key = lambda x:x.emo_score(), reverse=True)
 
-print(test_wsj)
+# test_wsj = str(wsj[0])
+
+# print(test_wsj)
 
 # print(test_wsj.title)
 # print(test_wsj.pub_date)
@@ -285,15 +292,15 @@ print(test_wsj)
 
 #Open the file and specify column headers
 output_file = open('output_data.csv','w')
-output_file.write('query_term,source,title,author,published_on,emo_score\n')
+output_file.write('query_term,source,title,author,published_on,emo_score,description\n')
 
 #Write in the NYT data
-for item in nyt:
-	output_file.write(query+", NYT, {}, {}, {}, {}\n".format(item.title,item.author,item.pub_date,item.emo_score()))
+for item in nyt_sorted:
+	output_file.write(query+", NYT, {}, {}, {}, {}, {}\n".format(item.title,item.author,item.pub_date,item.emo_score(),str(item)))
 
 #Write in the WSJ data
 
-for item in wsj:
-	output_file.write(query+", WSJ, {}, {}, {}, {}\n".format(item.title,item.author,item.pub_date,item.emo_score()))
+for item in wsj_sorted:
+	output_file.write(query+", WSJ, {}, {}, {}, {}, {}\n".format(item.title,item.author,item.pub_date,item.emo_score(),str(item)))
 
 
