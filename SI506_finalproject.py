@@ -68,11 +68,7 @@ def get_nyt_data(keywords,start_date,end_date,offset=0):
 		print("New NYT data written to cache")
 		return CACHE_DICT
 
-nyt_pages = [0,1] #two pages of 10 articles
 
-for item in nyt_pages:
-	get_nyt_data('Trump','20140810','20170810',item)
-	print("page " + str(item + 1))
 
 ##WSJ
 def get_wsj_data(keywords,start_date,end_date):
@@ -107,7 +103,7 @@ def get_wsj_data(keywords,start_date,end_date):
 		print("New WSJ data written to cache")
 		return CACHE_DICT
 
-get_wsj_data('Pence','2016-10-25T00:00:00Z','2017-10-25T00:00:00Z')
+
 
 
 
@@ -170,9 +166,6 @@ class Article_NYT(object):
 	def emo_score(self):
 		return self.positive_count() - self.negative_count()
 
-
-
-
 #WSJ
 
 class Article_WSJ(object):
@@ -216,9 +209,7 @@ class Article_WSJ(object):
 	def emo_score(self):
 		return self.positive_count() - self.negative_count()
 
-
-
-#************ ASSEMBLE ARTICLE LISTS
+#************ DEFINE ARTICLE LIST FORMATTING FUNCTIONS
 
 #Pull NYT and WSJ articles from the cache dictionary, we can identify
 #Them because
@@ -230,7 +221,7 @@ class Article_WSJ(object):
 #Finally we'll create instances of the artcle classes we defined for each article
 
 #Let's do NYT
-def format_NYT(CACHE_DICT={}):
+def nyt_format(response_data):
 	nyt_articles = []
 	#assembling list of NYT articles
 	for item in CACHE_DICT:
@@ -238,13 +229,11 @@ def format_NYT(CACHE_DICT={}):
 			print('found nyt articles')
 			for item2 in CACHE_DICT[item]['response']['docs']:
 				nyt_articles.append(Article_NYT(item2))
+	print("NYT article count " + str(len(nyt_articles)))
+	return nyt_articles
 
-
-print("NYT article count " + str(len(nyt_articles)))
-print(nyt_articles[0])
-
-#Okay now the WSJ
-def format_WSJ(CACHE_DICT={})
+#Okay now the WSJ,
+def wsj_format(response_data):
 	wsj_articles = []
 	#assembling list of NYT articles
 	for item in CACHE_DICT:
@@ -252,19 +241,22 @@ def format_WSJ(CACHE_DICT={})
 			print('found wsj articles')
 			for item2 in CACHE_DICT[item]['articles']:
 				wsj_articles.append(Article_WSJ(item2))
+	print("WSJ article count " + str(len(wsj_articles)))
+	return wsj_articles
 
+nyt = nyt_format(get_nyt_data('Trump','20140810','20170810',0)) + nyt_format(get_nyt_data('Trump','20140810','20170810',1))
 
-print("WSJ article count " + str(len(wsj_articles)))
-print(wsj_articles[0])
-
-test_nyt = nyt_articles[0]
+test_nyt = nyt[0]
 
 print(test_nyt.title)
 print(test_nyt.pub_date)
 print(test_nyt.abstract)
 print(test_nyt.author)
 
-test_wsj = wsj_articles[0]
+#List of WSJ classed articles 
+wsj = wsj_format(get_wsj_data('Pence','2016-10-25T00:00:00Z','2017-10-25T00:00:00Z'))
+
+test_wsj = wsj[0]
 
 print(test_wsj.title)
 print(test_wsj.pub_date)
