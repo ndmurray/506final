@@ -16,8 +16,8 @@ end = input("enter end date as YYYY-MM-DD: ")
 
 nyt_start = start
 nyt_end = end
-wsj_start = start + "T00:00:00Z"
-wsj_end = end + "T00:00:00Z"
+wsj_start = str(start) + "T00\:00\:00Z"
+wsj_end = str(end) + "T00\:00\:00Z"
 
 #************ CACHING SYSTEM
 
@@ -238,7 +238,7 @@ def nyt_format(response_data):
 	#assembling list of NYT articles
 	for item in CACHE_DICT:
 		if 'response' in CACHE_DICT[item]:
-			print('found nyt articles')
+			# print('found nyt articles')
 			for item2 in CACHE_DICT[item]['response']['docs']:
 				nyt_articles.append(Article_NYT(item2))
 	print("NYT article count " + str(len(nyt_articles)))
@@ -250,7 +250,7 @@ def wsj_format(response_data):
 	#assembling list of NYT articles
 	for item in CACHE_DICT:
 		if 'articles' in CACHE_DICT[item]:
-			print('found wsj articles')
+			# print('found wsj articles')
 			for item2 in CACHE_DICT[item]['articles']:
 				wsj_articles.append(Article_WSJ(item2))
 	print("WSJ article count " + str(len(wsj_articles)))
