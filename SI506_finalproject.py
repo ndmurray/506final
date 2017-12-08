@@ -16,6 +16,7 @@ end = input("enter end date as YYYY-MM-DD: ")
 
 nyt_start = start
 nyt_end = end
+
 wsj_start = str(start) + "T00\:00\:00Z"
 wsj_end = str(end) + "T00\:00\:00Z"
 
@@ -147,7 +148,7 @@ class Article_NYT(object):
 		else:
 			self.abstract = ''
 		if 'byline' in article_dict:
-			self.author = article_dict['byline']['original'].replace(","," ")
+			self.author = str(article_dict['byline']['original']).replace(","," ")
 
 	def abstract_clean(self):
 		return self.abstract.lower().replace('.','').replace(',','').replace(';','').replace(':','').replace(')','').replace('(','')
@@ -237,7 +238,7 @@ def nyt_format(response_data):
 	nyt_articles = []
 	#assembling list of NYT articles
 	for item in CACHE_DICT:
-		if 'response' in CACHE_DICT[item]:
+		if 'response' in CACHE_DICT[item] and (wsj_start not in item and wsj_end not in item and query in item):
 			# print('found nyt articles')
 			for item2 in CACHE_DICT[item]['response']['docs']:
 				nyt_articles.append(Article_NYT(item2))
@@ -249,7 +250,7 @@ def wsj_format(response_data):
 	wsj_articles = []
 	#assembling list of NYT articles
 	for item in CACHE_DICT:
-		if 'articles' in CACHE_DICT[item]:
+		if 'articles' in CACHE_DICT[item] and (wsj_start in item and wsj_end in item and query in item):
 			# print('found wsj articles')
 			for item2 in CACHE_DICT[item]['articles']:
 				wsj_articles.append(Article_WSJ(item2))
@@ -291,7 +292,7 @@ wsj_sorted = sorted(wsj, key = lambda x:x.emo_score(), reverse=True)
 #************ WRITE OUTPUT DATA TO CSV
 
 #Open the file and specify column headers
-output_file = open('output_data.csv','w')
+output_file = open('output_data.csv','w',encoding='utf-8')
 output_file.write('query_term,source,title,author,published_on,emo_score,description\n')
 
 #Write in the NYT data
