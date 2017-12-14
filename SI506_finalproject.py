@@ -20,114 +20,6 @@ nyt_end = end
 wsj_start = str(start) + "T00\:00\:00Z"
 wsj_end = str(end) + "T00\:00\:00Z"
 
-#************ CACHING SYSTEM
-
-#Specify cache file
-
-CACHE_FILE_NAME = "SI506finalproject_cache.json"
-
-#Load the cache file into a python dictionary
-
-try: 
-	cache_file = open(CACHE_FILE_NAME, 'r')
-	cache_str = cache_file.read()
-	CACHE_DICT = json.loads(cache_str)
-except:
-	CACHE_DICT = {}
-
-#Define the unique identifier function
-
-def unique_id(baseurl, params_dict, private_keys):
-	sorted_keys = sorted(params_dict.keys())
-	result = []
-	for item in sorted_keys:
-		if item not in private_keys:
-			result.append("{}-{}".format(item,params_dict[item]))
-	return baseurl + "_".join(result)
-
-
-#************ DATA REQUESTS
-
-
-##NYT
-def get_nyt_data(keywords,start_date,end_date,offset=0):
-	#data request components
-	baseurl = "https://api.nytimes.com/svc/search/v2/articlesearch.json"
-	params_dict = {
-		'q': keywords,
-		'begin_date': start_date,
-		'end_date': end_date,
-		'offset' : offset, #to blow away limit of 10 
-		'api-key': KEY_NYT
-	}
-	#build unique identifier
-	unique_ident_nyt = unique_id(baseurl, params_dict,['api-key'])
-	#Pull data from cache if it's in there
-	if unique_ident_nyt in CACHE_DICT:
-		print("Getting cached data from NYT")
-		return CACHE_DICT[unique_ident_nyt]
-	#otherwise request it from the NYT API	
-	else:
-		print("Requesting new data from NYT")
-		nyt_resp = requests.get(baseurl,params_dict)
-		print("NYT request status:" + str(nyt_resp.status_code))
-		#add response to the cache dictionary
-		CACHE_DICT[unique_ident_nyt] = json.loads(nyt_resp.text)
-		dumped_data = json.dumps(CACHE_DICT)
-		cache_write_file = open(CACHE_FILE_NAME,'w')
-		cache_write_file.write(dumped_data)
-		cache_write_file.close()
-		print("New NYT data written to cache")
-		return CACHE_DICT
-
-
-
-##WSJ
-def get_wsj_data(keywords,start_date,end_date):
-	#data request components
-	baseurl = "https://newsapi.org/v2/everything"
-	params_dict = {
-		'q': keywords,
-		'from': start_date,
-		'to': end_date,
-		'apiKey': KEY_WSJ,
-		'language': 'en',
-		'sources': 'the-wall-street-journal'
-	}
-	#build unique identifier
-	unique_ident_wsj = unique_id(baseurl, params_dict,['apiKey'])
-	#Pull data from cache if it's in there
-	if unique_ident_wsj in CACHE_DICT:
-		print("Getting cached data from WSJ")
-		return CACHE_DICT[unique_ident_wsj]
-	#otherwise request it from the WSJ API	
-	else:
-		print("Requesting new data from WSJ")
-		wsj_resp = requests.get(baseurl,params_dict)
-		print("WSJ request status:" + str(wsj_resp.status_code))
-		print(wsj_resp.url)
-		#add response to the cache dictionary
-		CACHE_DICT[unique_ident_wsj] = json.loads(wsj_resp.text)
-		dumped_data = json.dumps(CACHE_DICT)
-		cache_write_file = open(CACHE_FILE_NAME,'w')
-		cache_write_file.write(dumped_data)
-		cache_write_file.close()
-		print("New WSJ data written to cache")
-		return CACHE_DICT
-
-#************ BRING IN THE POSITIVE/NEGATIVE WORD FILES
-
-pos_words = []
-file = open('positive_words.txt', 'r')
-for item in file.readlines()[35:]:
-	pos_words.append(item.strip())
-file.close()
-
-neg_words = []
-file = open('negative_words.txt', 'r')
-for item in file.readlines()[35:]:
-	neg_words.append(item.strip())
-file.close()
 
 #************ DEFINE ARTICLE CLASSES
 
@@ -234,32 +126,140 @@ class Article_WSJ(object):
 #Finally we'll create instances of the artcle classes we defined for each article
 
 #Let's do NYT
-def nyt_format(response_data):
+def nyt_format(unique_id):
 	nyt_articles = []
 	#assembling list of NYT articles
-	for item in CACHE_DICT:
-		if 'response' in CACHE_DICT[item] and (wsj_start not in item and wsj_end not in item and query in item):
-			# print('found nyt articles')
-			for item2 in CACHE_DICT[item]['response']['docs']:
-				nyt_articles.append(Article_NYT(item2))
+	for item in CACHE_DICT[unique_id]['response']['docs']:
+		nyt_articles.append(Article_NYT(item))
 	print("NYT article count " + str(len(nyt_articles)))
 	return sorted(nyt_articles, key = lambda x:x.emo_score())
 
 #Okay now the WSJ,
-def wsj_format(response_data):
+def wsj_format(unique_id):
 	wsj_articles = []
 	#assembling list of NYT articles
-	for item in CACHE_DICT:
-		if 'articles' in CACHE_DICT[item] and (wsj_start in item and wsj_end in item and query in item):
-			# print('found wsj articles')
-			for item2 in CACHE_DICT[item]['articles']:
-				wsj_articles.append(Article_WSJ(item2))
+	for item in CACHE_DICT[unique_id]['articles']:
+				wsj_articles.append(Article_WSJ(item))
 	print("WSJ article count " + str(len(wsj_articles)))
 	return sorted(wsj_articles, key = lambda x:x.emo_score())
 
+
+#************ CACHING SYSTEM
+
+#Specify cache file
+CACHE_FILE_NAME = "SI506finalproject_cache.json"
+
+#Load the cache file into a python dictionary
+
+try: 
+	cache_file = open(CACHE_FILE_NAME, 'r')
+	cache_str = cache_file.read()
+	CACHE_DICT = json.loads(cache_str)
+except:
+	CACHE_DICT = {}
+
+#Define the unique identifier function
+
+def unique_id(baseurl, params_dict, private_keys):
+	sorted_keys = sorted(params_dict.keys())
+	result = []
+	for item in sorted_keys:
+		if item not in private_keys:
+			result.append("{}-{}".format(item,params_dict[item]))
+	return baseurl + "_".join(result)
+
+
+#************ DATA REQUESTS
+
+
+##NYT
+def get_nyt_data(keywords,start_date,end_date,page=0):
+	#data request components
+	baseurl = "https://api.nytimes.com/svc/search/v2/articlesearch.json"
+	params_dict = {
+		'q': keywords,
+		'begin_date': start_date,
+		'end_date': end_date,
+		'page' : page,  
+		'api-key': KEY_NYT
+	}
+	#build unique identifier
+	unique_ident_nyt = unique_id(baseurl, params_dict,['api-key'])
+	#Pull data from cache if it's in there
+	if unique_ident_nyt in CACHE_DICT:
+		print("Getting cached data from NYT")
+		return nyt_format(unique_ident_nyt)
+	#otherwise request it from the NYT API	
+	else:
+		print("Requesting new data from NYT")
+		nyt_resp = requests.get(baseurl,params_dict)
+		print("NYT request status:" + str(nyt_resp.status_code))
+		#add response to the cache dictionary
+		CACHE_DICT[unique_ident_nyt] = json.loads(nyt_resp.text)
+		dumped_data = json.dumps(CACHE_DICT)
+		cache_write_file = open(CACHE_FILE_NAME,'w')
+		cache_write_file.write(dumped_data)
+		cache_write_file.close()
+		print("New NYT data written to cache")
+		return nyt_format(unique_ident_nyt)
+
+
+
+##WSJ
+def get_wsj_data(keywords,start_date,end_date):
+	#data request components
+	baseurl = "https://newsapi.org/v2/everything"
+	params_dict = {
+		'q': keywords,
+		'from': start_date,
+		'to': end_date,
+		'apiKey': KEY_WSJ,
+		'language': 'en',
+		'sources': 'the-wall-street-journal'
+	}
+	#build unique identifier
+	unique_ident_wsj = unique_id(baseurl, params_dict,['apiKey'])
+	#Pull data from cache if it's in there
+	if unique_ident_wsj in CACHE_DICT:
+		print("Getting cached data from WSJ")
+		return wsj_format(unique_ident_wsj)
+	#otherwise request it from the WSJ API	
+	else:
+		print("Requesting new data from WSJ")
+		wsj_resp = requests.get(baseurl,params_dict)
+		print("WSJ request status:" + str(wsj_resp.status_code))
+		print(wsj_resp.url)
+		#add response to the cache dictionary
+		CACHE_DICT[unique_ident_wsj] = json.loads(wsj_resp.text)
+		dumped_data = json.dumps(CACHE_DICT)
+		cache_write_file = open(CACHE_FILE_NAME,'w')
+		cache_write_file.write(dumped_data)
+		cache_write_file.close()
+		print("New WSJ data written to cache")
+		return wsj_format(unique_ident_wsj)
+
+#************ BRING IN THE POSITIVE/NEGATIVE WORD FILES
+
+pos_words = []
+file = open('positive_words.txt', 'r')
+for item in file.readlines()[35:]:
+	pos_words.append(item.strip())
+file.close()
+
+neg_words = []
+file = open('negative_words.txt', 'r')
+for item in file.readlines()[35:]:
+	neg_words.append(item.strip())
+file.close()
+
+
 #************ PULL DATA BASED ON USER DEFINED PARAMETERS
 
-nyt = nyt_format(get_nyt_data(query,nyt_start,nyt_end,0)) + nyt_format(get_nyt_data(query,nyt_start,nyt_end,1))
+
+nyt_1 = get_nyt_data(query,nyt_start,nyt_end,0)
+nyt_2 = get_nyt_data(query,nyt_start,nyt_end,1)
+
+nyt = nyt_1 + nyt_2
 
 #sort descending by emo score
 nyt_sorted = sorted(nyt, key = lambda x:x.emo_score(), reverse=True)
@@ -275,7 +275,7 @@ nyt_sorted = sorted(nyt, key = lambda x:x.emo_score(), reverse=True)
 # print(test_nyt.author)
 
 #List of WSJ classed articles 
-wsj = wsj_format(get_wsj_data(query,wsj_start,wsj_end))
+wsj = get_wsj_data(query,wsj_start,wsj_end)
 
 #sort descending by emo score
 wsj_sorted = sorted(wsj, key = lambda x:x.emo_score(), reverse=True)
